@@ -1,0 +1,67 @@
+{{template "base" .}}
+
+{{define "content" }}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1 class="mt-5">EMI CALCULATOR</h1>
+                <hr>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <form id="emi-form">
+                    <div class="form-group">
+                        <label for="loanAmount" >Loan Amount</label>
+                        <input type="text" class="form-control" id="loanAmount" name="loanAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="interestRate">Rate of Interest (%)</label>
+                        <input type="text" class="form-control" id="interestRate" name="interestRate" required>
+                    </div>
+                    <br>
+                    <button type="submit" class="btn btn-primary">Calculate EMI</button>
+                </form>
+                <div id="emi"></div>
+            </div>
+        </div>
+    </div>
+{{end}}
+
+{{define "js"}}
+    <script>
+        document.getElementById("emi-form").addEventListener("submit", function(event) {
+        event.preventDefault(); //prevent form from submitting
+        var loanAmount = parseFloat(document.getElementById("loanAmount").value);
+        var interestRate = parseFloat(document.getElementById("interestRate").value);
+        
+        fetch('http://localhost:8080', { // Change this URL to match your server's URL
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ loanAmount: loanAmount, interestRate: interestRate }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle response from server, such as displaying EMI or error message
+                console.log(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+        
+        function displayEMIResults(data) {
+            var emiResultsDiv = document.getElementById('emi');
+            emiResultsDiv.innerHTML = '';
+
+            Object.keys(data).forEach(function(key) {
+                var emi = data[key];
+                var emiElement = document.createElement('p');
+                emiElement.textContent = 'EMI for ' + key + ' months: ' + emi.toFixed(2);
+                emiResultsDiv.appendChild(emiElement);
+            });
+        }
+    </script>
+{{end}}

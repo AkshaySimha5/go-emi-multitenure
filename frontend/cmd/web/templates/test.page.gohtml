@@ -30,38 +30,91 @@
 
 {{define "js"}}
     <script>
+        let sent = document.getElementById("payload");
+        let received = document.getElementById("received");
         document.getElementById("emi-form").addEventListener("submit", function(event) {
-        event.preventDefault(); //prevent form from submitting
+        event.preventDefault(); //to prevent form from submitting
         var loanAmount = parseFloat(document.getElementById("loanAmount").value);
         var interestRate = parseFloat(document.getElementById("interestRate").value);
-        
-        fetch('http://localhost:8080', { // Change this URL to match your server's URL
+        fetch("http:\/\/localhost:8080", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ loanAmount: loanAmount, interestRate: interestRate }),
+                body: JSON.stringify({ loanamount: loanAmount, rateofinterest: interestRate }),
             })
             .then(response => response.json())
             .then(data => {
-                // Handle response from server, such as displaying EMI or error message
-                console.log(data);
+                displayEMIResults(data, loanAmount);
+                if(data.error){
+                    console.log(data.message)
+                } 
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.log(error)
             });
         });
         
-        function displayEMIResults(data) {
+        function displayEMIResults(data, loanAmount) {
             var emiResultsDiv = document.getElementById('emi');
-            emiResultsDiv.innerHTML = '';
+            emiResultsDiv.innerHTML = '<hr><br>';
+              var table = document.createElement('table');
+            table.className = 'table table-bordered';
+            table.style.border='1px solid black';
+            var tableHead = document.createElement('thead');
+            var headRow = document.createElement('tr');
+            var headCell1 = document.createElement('th');
+            headCell1.textContent = 'Months';
+            headCell1.style.width = '25%';
+            headCell1.className = 'text-center';
+            var headCell2 = document.createElement('th');
+            headCell2.textContent = 'EMI';
+            headCell2.style.width = '25%';
+            headCell2.className = 'text-center';
+            var headCell3 = document.createElement('th');
+            headCell3.textContent = 'Total Amount Paid';
+            headCell3.style.width = '25%';
+            headCell3.className = 'text-center';
+            var headCell4 = document.createElement('th');
+            headCell4.textContent = 'Interest Paid';
+            headCell4.className = 'text-center'; 
+            headCell4.style.width = '25%';
+            headRow.appendChild(headCell1);
+            headRow.appendChild(headCell2);
+            headRow.appendChild(headCell3);
+            headRow.appendChild(headCell4);
+            tableHead.appendChild(headRow);
+            table.appendChild(tableHead);
+
+            var tableBody = document.createElement('tbody');
 
             Object.keys(data).forEach(function(key) {
                 var emi = data[key];
-                var emiElement = document.createElement('p');
-                emiElement.textContent = 'EMI for ' + key + ' months: ' + emi.toFixed(2);
-                emiResultsDiv.appendChild(emiElement);
+                var months = key.slice(3)+' ('+parseInt(key.slice(3))/12+' years)';
+                var totalAmountPaid = emi * parseInt(months);
+                var interestPaid = totalAmountPaid - loanAmount;
+                var row = document.createElement('tr');
+                var cell1 = document.createElement('td');
+                cell1.textContent = months;
+                cell1.className = 'text-center'
+                var cell2 = document.createElement('td');
+                cell2.textContent = '₹' + emi.toFixed(2);
+                cell2.className = 'text-center'
+                var cell3 = document.createElement('td');
+                cell3.textContent = '₹' + totalAmountPaid.toFixed(2);
+                cell3.className = 'text-center'
+                var cell4 = document.createElement('td');
+                cell4.textContent = '₹' + interestPaid.toFixed(2);
+                cell4.className = 'text-center';
+                row.appendChild(cell1);
+                row.appendChild(cell2);
+                row.appendChild(cell3);
+                row.appendChild(cell4);
+                tableBody.appendChild(row);
             });
+
+            table.appendChild(tableBody);
+            emiResultsDiv.appendChild(table);
         }
     </script>
 {{end}}
